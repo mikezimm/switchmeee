@@ -27,24 +27,55 @@ export interface ISwitchmeeeWebPartProps {
   /**
    * DD Subscriber: Step 1 - add this.properties.pivotProps to WebPartProps
    */
-  pivotPropsObject: DynamicProperty<any>;
+  pivotPropsObject: DynamicProperty<object>;
 }
 
 export default class SwitchmeeeWebPart extends BaseClientSideWebPart<ISwitchmeeeWebPartProps> {
 
-  public render(): void {
-    const element: React.ReactElement<ISwitchmeeeProps > = React.createElement(
-      Switchmeee,
-      {
-        description: this.properties.description,
-        /**
-         * DD Subscriber: Step 2 - ( 5:01 ) pass down props to react component
-         */
-        pivotPropsObject: this.properties.pivotPropsObject.tryGetValue(),
-      }
-    );
 
-    ReactDom.render(element, this.domElement);
+  protected onInit(): Promise<void> {
+
+  /**
+   * DD Subscriber: Step 5 - (7:33) Check to see if this was wired up 
+   */
+  if ( !this.properties.pivotPropsObject.reference ) {
+      this.properties.pivotPropsObject.setValue({ title: 'propsNotDefined', id: 'NA' });
+  }
+
+   return Promise.resolve();
+
+  }
+
+  public render(): void {
+
+   /**
+   * DD Subscriber: Step 6 - (8:33) Check to see if this was wired up 
+   */
+    const pickedProps : any | undefined = this.properties.pivotPropsObject.tryGetValue();
+
+  /**
+   * DD Subscriber: Step 7 - (8:33) Only if props were set, render component 
+   */
+    if ( pickedProps ) {
+
+      const element: React.ReactElement<ISwitchmeeeProps > = React.createElement(
+        Switchmeee,
+        {
+          description: this.properties.description,
+          /**
+           * DD Subscriber: Step 8 - ( 8:45 ) pass down props to react component
+           */
+          pivotPropsObject: pickedProps,
+        }
+      );
+
+      ReactDom.render(element, this.domElement);
+
+    }
+
+
+
+
   }
 
   protected onDispose(): void {
@@ -58,7 +89,7 @@ export default class SwitchmeeeWebPart extends BaseClientSideWebPart<ISwitchmeee
   protected get propertiesMetadata(): IWebPartPropertiesMetadata {
     return {
       'pivotPropsObject': { dynamicPropertyType: 'object' }
-    }
+    };
   }
 
   protected get dataVersion(): Version {
@@ -88,14 +119,18 @@ export default class SwitchmeeeWebPart extends BaseClientSideWebPart<ISwitchmeee
                   ],
    /**
    * DD Subscriber: Step 5 - ( 10: 45 ) :  sharedConfiguration in case you don't want
+   * settings on consumer:
+   *    Depth:  If you have multiple dynamic properities, you can specify how the connection is shared
+   *    depth: DynamicDataSharedDepth.Property, === all consumers can share the property 
+   *    depth: DynamicDataSharedDepth.None, == entire object
    */
                   sharedConfiguration: {
-                    depth: DynamicDataSharedDepth.Property,
-                    /*
+                    depth: DynamicDataSharedDepth.None,
+
                     source: {
                       sourcesLabel: 'Select webpart containing your source'
                     }
-                    */
+                    /*                    */
                   }
                 }),
                 PropertyPaneTextField('description', {
